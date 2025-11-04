@@ -8,6 +8,7 @@ find_package(catkin REQUIRED COMPONENTS
   aslam_backend_python
   incremental_calibration_python
   aslam_cameras_april
+  ethz_apriltag2
   aslam_splines_python
   numpy_eigen
   python_module
@@ -15,6 +16,8 @@ find_package(catkin REQUIRED COMPONENTS
   sm_python
   aslam_cv_backend_python
 )
+
+find_package(OpenCV REQUIRED)
 
 catkin_package(
   INCLUDE_DIRS include  
@@ -24,7 +27,7 @@ catkin_package(
 ##################################
 # error terms (+python export)
 ##################################
-include_directories(include ${catkin_INCLUDE_DIRS})
+include_directories(include ${catkin_INCLUDE_DIRS} ${OpenCV_INCLUDE_DIRS})
 
 add_library(${PROJECT_NAME}_errorterms
   src/EuclideanError.cpp
@@ -41,6 +44,16 @@ add_python_export_library(${PROJECT_NAME}_errorterms_python python/${PROJECT_NAM
   src/module.cpp
 )
 target_link_libraries(${PROJECT_NAME}_errorterms_python ${PROJECT_NAME}_errorterms)
+
+##################################
+# single image detector
+##################################
+add_executable(single_image_detector src/single_image_detector.cpp)
+target_link_libraries(single_image_detector ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
+
+install(TARGETS single_image_detector
+  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
 
 ##################################
 # tests
