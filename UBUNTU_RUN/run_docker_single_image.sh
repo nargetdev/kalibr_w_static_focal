@@ -1,0 +1,1 @@
+docker run --rm -it -e DISPLAY=:1 -e QT_X11_NO_MITSHM=1 -v /tmp/.X11-unix:/tmp/.X11-unix:rw -v /media/ros/rig/FRAMES/cam0/1762219673640745083.png:/data/image.png -v /home/ros/Desktop/OUT:/out  kalibr:single-image-detector
