@@ -1,1 +1,1 @@
-docker buildx build --platform linux/arm64/v8 -t kalibr:noetic-arm64_nov4 -f Dockerfile_ros1_20_04 .
+docker buildx build --platform linux/arm64/v8 -t kalibr:noetic-arm64 -f Dockerfile_ros1_20_04 .
