@@ -1,0 +1,1 @@
+docker run --rm -i -e DISPLAY=host.docker.internal:0 -e QT_X11_NO_MITSHM=1 -v /tmp/.X11-unix:/tmp/.X11-unix:rw -v ./data/stable_image_cam_0_20251024_173205_000.png:/data/image.png -v ./out/:/out kalibr:single-image-detector-efficient /bin/bash -c "source /catkin_ws/devel/setup.bash && single_image_detector /data/image.png"

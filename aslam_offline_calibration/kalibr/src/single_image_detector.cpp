@@ -45,9 +45,9 @@ int main(int argc, char* argv[]) {
     for (const auto& det : detections) {
         det.draw(image);  // Draws the tag outline and ID
     }
-    cv::imwrite("/data/detected_image.png", image);
-    cv::imshow("AprilTag Detections", image);
-    cv::waitKey(0);  // Press any key to close the window
+    cv::imwrite("/out/result.png", image);
+    // cv::imshow("AprilTag Detections", image);
+    // cv::waitKey(0);  // Press any key to close the window
 
     return 0;
 }

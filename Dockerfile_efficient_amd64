@@ -1,0 +1,16 @@
+FROM kalibr:noetic
+
+# Update the single image detector source
+ADD aslam_offline_calibration/kalibr/src/single_image_detector.cpp $WORKSPACE/src/kalibr/aslam_offline_calibration/kalibr/src/single_image_detector.cpp
+
+# Rebuild only the kalibr package
+RUN cd $WORKSPACE && \
+    catkin build kalibr
+
+# When a user runs a command we will run this code before theirs
+# This will allow for using the manual focal length if it fails to init
+# https://github.com/ethz-asl/kalibr/pull/346
+ENTRYPOINT export KALIBR_MANUAL_FOCAL_LENGTH_INIT=1 && \
+    /bin/bash -c "source \"$WORKSPACE/devel/setup.bash\"" && \
+    cd $WORKSPACE && \
+    /bin/bash
