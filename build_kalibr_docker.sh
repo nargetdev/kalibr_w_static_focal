@@ -1,1 +1,1 @@
-docker build -f Dockerfile_ros1_20_04 -t kalibr:ros1-20.04 .
+docker build -f Dockerfile_ros1_20_04 -t kalibr:imx708_wide .
