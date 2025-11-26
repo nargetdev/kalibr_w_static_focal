@@ -1,3 +1,14 @@
+this repo mods vs upstream ![https://raw.githubusercontent.com/wiki/ethz-asl/kalibr](https://raw.githubusercontent.com/wiki/ethz-asl/kalibr)
+
+# chamfer separator
+
+```bash
+cd aslam_cv/aslam_cameras_april/src/gen_pdf
+uv run generate_aprilgrid_from_yaml.py april_24x24_size20mm_space0.3.yaml --border-bits
+1 --corner-fillet-micrometers 500
+```
+
+---
 ![Kalibr](https://raw.githubusercontent.com/wiki/ethz-asl/kalibr/images/kalibr_small.png)
 
 [![ROS1 Ubuntu 20.04](https://github.com/ethz-asl/kalibr/actions/workflows/docker_2004_build.yaml/badge.svg)](https://github.com/ethz-asl/kalibr/actions/workflows/docker_2004_build.yaml)
