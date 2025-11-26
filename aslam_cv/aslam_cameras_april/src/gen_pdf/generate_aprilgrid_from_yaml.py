@@ -40,6 +40,25 @@ def parse_args():
         help="Also generate an SVG file via createTargetPDF.py.",
     )
 
+    parser.add_argument(
+        "--with-text",
+        action="store_true",
+        help=(
+            "Enable text labels and YAML caption on the target "
+            "(omit --no-text when calling createTargetPDF.py)."
+        ),
+    )
+
+    parser.add_argument(
+        "--border-bits",
+        type=int,
+        default=2,
+        help=(
+            "Size of the black border around each tag code in bit squares "
+            "(1 or 2; default: %(default)s)."
+        ),
+    )
+
     return parser.parse_args()
 
 
@@ -92,12 +111,17 @@ def main():
         print(f"[ERROR] createTargetPDF.py not found next to this script: {create_target_script}")
         sys.exit(1)
 
+    # Ensure output directory exists and build an output path inside it.
+    output_dir = os.path.join(script_dir, "output")
+    os.makedirs(output_dir, exist_ok=True)
+    output_basepath = os.path.join(output_dir, output_basename)
+
     # Build command to call the existing generator.
-    # Note: createTargetPDF.py expects the output base name as the first positional argument.
+    # Note: createTargetPDF.py expects the output base name (or path) as the first positional argument.
     cmd = [
         sys.executable,
         create_target_script,
-        output_basename,
+        output_basepath,
         "--type",
         "apriltag",
         "--nx",
@@ -110,8 +134,14 @@ def main():
         str(tag_spacing),
         "--tfam",
         "t36h11",
-        "--no-text",
+        "--border-bits",
+        str(args.border_bits),
+        "--yaml-config",
+        yaml_path,
     ]
+
+    if not args.with_text:
+        cmd.append("--no-text")
 
     if args.eps:
         cmd.append("--eps")
@@ -126,12 +156,13 @@ def main():
         print(f"[ERROR] createTargetPDF.py failed with return code {e.returncode}")
         sys.exit(e.returncode)
 
+    pdf_path = f"{output_basepath}.pdf"
     print("[INFO] Done. Generated:")
-    print(f"  {output_basename}.pdf")
+    print(f"  {os.path.abspath(pdf_path)}")
     if args.eps:
-        print(f"  {output_basename}.eps")
+        print(f"  {os.path.abspath(output_basepath + '.eps')}")
     if args.svg:
-        print(f"  {output_basename}.svg")
+        print(f"  {os.path.abspath(output_basepath + '.svg')}")
 
 
 if __name__ == "__main__":

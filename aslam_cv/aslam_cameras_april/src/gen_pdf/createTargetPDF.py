@@ -87,7 +87,7 @@ def generateAprilTag(canvas, position, metricSize, tagSpacing, tagID, tagFamilil
             c.fill(path.rect(point[0], point[1], metricSquareSize, metricSquareSize),[color.rgb.black])
 
 #tagSpaceing in % of tagSize
-def generateAprilBoard(canvas, n_cols, n_rows, tagSize, tagSpacing=0.25, tagFamilily="t36h11", draw_text=True):
+def generateAprilBoard(canvas, n_cols, n_rows, tagSize, tagSpacing=0.25, tagFamilily="t36h11", draw_text=True, yaml_text=None, borderBits=2):
     
     if(tagSpacing<0 or tagSpacing>1.0):
         print("[ERROR]: Invalid tagSpacing specified.  [0-1.0] of tagSize")
@@ -107,7 +107,7 @@ def generateAprilBoard(canvas, n_cols, n_rows, tagSize, tagSpacing=0.25, tagFami
         for x in range(0,n_cols):
             id = n_cols * y + x
             pos = ( x*(1+tagSpacing)*tagSize, y*(1+tagSpacing)*tagSize)
-            generateAprilTag(canvas, pos, tagSize, tagSpacing, id, tagFamililyData, rotation=2)
+            generateAprilTag(canvas, pos, tagSize, tagSpacing, id, tagFamililyData, rotation=2, borderBits=borderBits)
             #c.text(pos[0]+0.45*tagSize, pos[1]-0.7*tagSize*tagSpacing, "{0}".format(id))
     
     #draw axis
@@ -129,6 +129,16 @@ def generateAprilBoard(canvas, n_cols, n_rows, tagSize, tagSpacing=0.25, tagFami
         #text
         caption = "{0}x{1} tags, size={2}cm and spacing={3}cm".format(n_cols,n_rows,tagSize,tagSpacing*tagSize)
         c.text(pos[0]+0.6*tagSize, pos[0], caption)
+
+        # optionally render YAML configuration as text below the grid
+        if yaml_text:
+            line_height = tagSize * 0.4
+            base_x = pos[0]
+            # place YAML text below the caption
+            y = pos[0] - line_height
+            for line in yaml_text.splitlines():
+                c.text(base_x, y, line)
+                y -= line_height
 
 
 def generateCheckerboard(canvas, n_cols, n_rows, size_cols, size_rows, draw_text=True):
@@ -169,6 +179,7 @@ if __name__ == "__main__":
     parser.add_argument('--tsize', type=float, default=0.02, dest='tsize', help='The size of one tag [m] (default: %(default)s)')
     parser.add_argument('--tspace', type=float, default=0.25, dest='tagspacing', help='The space between the tags in fraction of the edge size [0..1] (default: %(default)s)')
     parser.add_argument('--tfam', default='t36h11', dest='tagfamiliy', help='Familiy of April tags {0} (default: %(default)s)'.format(list(AprilTagCodes.TagFamilies.keys()))) 
+    parser.add_argument('--border-bits', type=int, default=2, dest='borderBits', help='Size of black border around tag code bits in units of bit squares (default: %(default)s)')
     
     parser.add_argument('--csx', type=float, default=0.03, dest='chessSzX', help='The size of one chessboard square in x direction [m] (default: %(default)s)')
     parser.add_argument('--csy', type=float, default=0.03, dest='chessSzY', help='The size of one chessboard square in y direction [m] (default: %(default)s)')
@@ -176,6 +187,7 @@ if __name__ == "__main__":
     parser.add_argument('--eps', action='store_true', dest='do_eps', help='Also output an EPS file', required=False)
     parser.add_argument('--svg', action='store_true', dest='do_svg', help='Also output an SVG file', required=False)
     parser.add_argument('--no-text', action='store_true', dest='no_text', help='Disable all text labels on the target (avoids requiring a TeX installation)', required=False)
+    parser.add_argument('--yaml-config', dest='yaml_config', help='Path to a YAML config file to print below the AprilGrid when text is enabled', required=False)
 
     #Parser the argument list
     try:
@@ -187,10 +199,19 @@ if __name__ == "__main__":
     c = canvas.canvas()
 
     draw_text = not parsed.no_text
+
+    yaml_text = None
+    if parsed.yaml_config and draw_text:
+        try:
+            with open(parsed.yaml_config, "r") as f:
+                yaml_text = f.read()
+        except Exception as e:
+            print(f"[WARNING] Failed to read yaml_config '{parsed.yaml_config}': {e}")
+            yaml_text = None
     
     #draw the board
     if parsed.gridType == "apriltag":
-        generateAprilBoard(canvas, parsed.n_cols, parsed.n_rows, parsed.tsize, parsed.tagspacing, parsed.tagfamiliy, draw_text=draw_text)
+        generateAprilBoard(canvas, parsed.n_cols, parsed.n_rows, parsed.tsize, parsed.tagspacing, parsed.tagfamiliy, draw_text=draw_text, yaml_text=yaml_text, borderBits=parsed.borderBits)
     elif parsed.gridType == "checkerboard":
         generateCheckerboard(c, parsed.n_cols, parsed.n_rows, parsed.chessSzX, parsed.chessSzY, draw_text=draw_text)
     else:
