@@ -33,7 +33,7 @@ class AprilTagCodes:
             sys.exit(0)
 
 #borderBits must be consitent with the variable "blackBorder" in the detector code in file ethz_apriltag2/src/TagFamily.cc
-def generateAprilTag(canvas, position, metricSize, tagSpacing, tagID, tagFamililyData, rotation=2, symmCorners=True, borderBits=2):
+def generateAprilTag(canvas, position, metricSize, tagSpacing, tagID, tagFamililyData, rotation=2, symmCorners=True, borderBits=2, corner_fillet_bits=0):
     #get the tag code
     try:
         tagCode=tagFamililyData.tagCodes[tagID]
@@ -78,16 +78,17 @@ def generateAprilTag(canvas, position, metricSize, tagSpacing, tagID, tagFamilil
         
         corners = [ 
                     [xPos-metricSquareSize, yPos-metricSquareSize ],
-                    [xPos+metricSize, yPos-metricSquareSize],
-                    [xPos+metricSize, yPos+metricSize],
+                    [xPos+metricSize,       yPos-metricSquareSize],
+                    [xPos+metricSize,       yPos+metricSize],
                     [xPos-metricSquareSize, yPos+metricSize] 
                   ]
         
+        # draw symmetry squares exactly as in the original implementation
         for point in corners:
             c.fill(path.rect(point[0], point[1], metricSquareSize, metricSquareSize),[color.rgb.black])
 
 #tagSpaceing in % of tagSize
-def generateAprilBoard(canvas, n_cols, n_rows, tagSize, tagSpacing=0.25, tagFamilily="t36h11", draw_text=True, yaml_text=None, borderBits=2):
+def generateAprilBoard(canvas, n_cols, n_rows, tagSize, tagSpacing=0.25, tagFamilily="t36h11", draw_text=True, yaml_text=None, borderBits=2, corner_fillet_micrometers=0.0):
     
     if(tagSpacing<0 or tagSpacing>1.0):
         print("[ERROR]: Invalid tagSpacing specified.  [0-1.0] of tagSize")
@@ -107,8 +108,60 @@ def generateAprilBoard(canvas, n_cols, n_rows, tagSize, tagSpacing=0.25, tagFami
         for x in range(0,n_cols):
             id = n_cols * y + x
             pos = ( x*(1+tagSpacing)*tagSize, y*(1+tagSpacing)*tagSize)
-            generateAprilTag(canvas, pos, tagSize, tagSpacing, id, tagFamililyData, rotation=2, borderBits=borderBits)
+            generateAprilTag(canvas, pos, tagSize, tagSpacing, id, tagFamililyData, rotation=2, borderBits=borderBits, corner_fillet_bits=0)
             #c.text(pos[0]+0.45*tagSize, pos[1]-0.7*tagSize*tagSpacing, "{0}".format(id))
+
+    # apply 45-degree chamfers to the separator squares between tags (not the tags themselves)
+    # corner_fillet_micrometers refers to the leg length of the triangular chamfer in micrometers
+    if corner_fillet_micrometers > 0.0 and tagSpacing > 0.0:
+        # tagSize is now in centimeters; convert micrometers to centimeters: 1 um = 1e-4 cm
+        fillet_len = (corner_fillet_micrometers * 1e-4)
+        metricSquareSize = tagSpacing * tagSize
+
+        # internal intersections only: 1..n_cols-1, 1..n_rows-1
+        for gy in range(1, n_rows):
+            for gx in range(1, n_cols):
+                sep_x = gx * (1+tagSpacing) * tagSize - metricSquareSize
+                sep_y = gy * (1+tagSpacing) * tagSize - metricSquareSize
+
+                # bottom-left corner of separator square
+                blx, bly = sep_x, sep_y
+
+                # bottom-left triangle
+                bl = path.path(
+                    path.moveto(blx, bly),
+                    path.lineto(blx + fillet_len, bly),
+                    path.lineto(blx, bly + fillet_len),
+                    path.closepath(),
+                )
+                c.fill(bl, [color.rgb.white])
+
+                # bottom-right triangle
+                br = path.path(
+                    path.moveto(blx + metricSquareSize, bly),
+                    path.lineto(blx + metricSquareSize - fillet_len, bly),
+                    path.lineto(blx + metricSquareSize, bly + fillet_len),
+                    path.closepath(),
+                )
+                c.fill(br, [color.rgb.white])
+
+                # top-left triangle
+                tl = path.path(
+                    path.moveto(blx, bly + metricSquareSize),
+                    path.lineto(blx + fillet_len, bly + metricSquareSize),
+                    path.lineto(blx, bly + metricSquareSize - fillet_len),
+                    path.closepath(),
+                )
+                c.fill(tl, [color.rgb.white])
+
+                # top-right triangle
+                tr = path.path(
+                    path.moveto(blx + metricSquareSize, bly + metricSquareSize),
+                    path.lineto(blx + metricSquareSize - fillet_len, bly + metricSquareSize),
+                    path.lineto(blx + metricSquareSize, bly + metricSquareSize - fillet_len),
+                    path.closepath(),
+                )
+                c.fill(tr, [color.rgb.white])
     
     #draw axis
     pos = ( -1.5*tagSpacing*tagSize, -1.5*tagSpacing*tagSize)
@@ -180,6 +233,7 @@ if __name__ == "__main__":
     parser.add_argument('--tspace', type=float, default=0.25, dest='tagspacing', help='The space between the tags in fraction of the edge size [0..1] (default: %(default)s)')
     parser.add_argument('--tfam', default='t36h11', dest='tagfamiliy', help='Familiy of April tags {0} (default: %(default)s)'.format(list(AprilTagCodes.TagFamilies.keys()))) 
     parser.add_argument('--border-bits', type=int, default=2, dest='borderBits', help='Size of black border around tag code bits in units of bit squares (default: %(default)s)')
+    parser.add_argument('--corner-fillet-micrometers', type=float, default=0.0, dest='cornerFilletMicrometers', help='Size of the chamfer on separator squares in micrometers (leg length of the right triangle) (default: %(default)s)')
     
     parser.add_argument('--csx', type=float, default=0.03, dest='chessSzX', help='The size of one chessboard square in x direction [m] (default: %(default)s)')
     parser.add_argument('--csy', type=float, default=0.03, dest='chessSzY', help='The size of one chessboard square in y direction [m] (default: %(default)s)')
@@ -211,7 +265,7 @@ if __name__ == "__main__":
     
     #draw the board
     if parsed.gridType == "apriltag":
-        generateAprilBoard(canvas, parsed.n_cols, parsed.n_rows, parsed.tsize, parsed.tagspacing, parsed.tagfamiliy, draw_text=draw_text, yaml_text=yaml_text, borderBits=parsed.borderBits)
+        generateAprilBoard(canvas, parsed.n_cols, parsed.n_rows, parsed.tsize, parsed.tagspacing, parsed.tagfamiliy, draw_text=draw_text, yaml_text=yaml_text, borderBits=parsed.borderBits, corner_fillet_micrometers=parsed.cornerFilletMicrometers)
     elif parsed.gridType == "checkerboard":
         generateCheckerboard(c, parsed.n_cols, parsed.n_rows, parsed.chessSzX, parsed.chessSzY, draw_text=draw_text)
     else:

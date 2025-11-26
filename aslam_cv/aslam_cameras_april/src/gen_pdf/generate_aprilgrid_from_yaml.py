@@ -59,6 +59,16 @@ def parse_args():
         ),
     )
 
+    parser.add_argument(
+        "--corner-fillet-micrometers",
+        type=float,
+        default=0.0,
+        help=(
+            "Size of the chamfer on separator squares in micrometers "
+            "(leg length of the right triangle; default: %(default)s)."
+        ),
+    )
+
     return parser.parse_args()
 
 
@@ -101,7 +111,15 @@ def main():
     if args.output is not None:
         output_basename = args.output
     else:
-        output_basename = os.path.splitext(os.path.basename(yaml_path))[0]
+        # start from YAML stem and append key rendering options so that
+        # different variants produce distinct filenames
+        base = os.path.splitext(os.path.basename(yaml_path))[0]
+        suffix_parts = [
+            f"bb{args.border_bits}",
+            f"cfum{int(args.corner_fillet_micrometers)}",
+            "wt" if args.with_text else "nt",
+        ]
+        output_basename = base + "_" + "_".join(suffix_parts)
 
     # Resolve path to the existing createTargetPDF.py script (same directory as this file).
     script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -136,6 +154,8 @@ def main():
         "t36h11",
         "--border-bits",
         str(args.border_bits),
+        "--corner-fillet-micrometers",
+        str(args.corner_fillet_micrometers),
         "--yaml-config",
         yaml_path,
     ]
