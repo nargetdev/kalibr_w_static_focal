@@ -87,7 +87,7 @@ def generateAprilTag(canvas, position, metricSize, tagSpacing, tagID, tagFamilil
             c.fill(path.rect(point[0], point[1], metricSquareSize, metricSquareSize),[color.rgb.black])
 
 #tagSpaceing in % of tagSize
-def generateAprilBoard(canvas, n_cols, n_rows, tagSize, tagSpacing=0.25, tagFamilily="t36h11"):
+def generateAprilBoard(canvas, n_cols, n_rows, tagSize, tagSpacing=0.25, tagFamilily="t36h11", draw_text=True):
     
     if(tagSpacing<0 or tagSpacing>1.0):
         print("[ERROR]: Invalid tagSpacing specified.  [0-1.0] of tagSize")
@@ -116,20 +116,22 @@ def generateAprilBoard(canvas, n_cols, n_rows, tagSize, tagSpacing=0.25, tagFami
              [color.rgb.red,
               deco.earrow([deco.stroked([color.rgb.red, style.linejoin.round]),
               deco.filled([color.rgb.red])], size=tagSize*0.10)])
-    c.text(pos[0]+tagSize*0.3, pos[1], "x")
     
     c.stroke(path.line(pos[0], pos[1], pos[0], pos[1]+tagSize*0.3),
              [color.rgb.green,
               deco.earrow([deco.stroked([color.rgb.green, style.linejoin.round]),
               deco.filled([color.rgb.green])], size=tagSize*0.10)])
-    c.text(pos[0], pos[1]+tagSize*0.3, "y")
 
-    #text
-    caption = "{0}x{1} tags, size={2}cm and spacing={3}cm".format(n_cols,n_rows,tagSize,tagSpacing*tagSize)
-    c.text(pos[0]+0.6*tagSize, pos[0], caption)
+    if draw_text:
+        c.text(pos[0]+tagSize*0.3, pos[1], "x")
+        c.text(pos[0], pos[1]+tagSize*0.3, "y")
+
+        #text
+        caption = "{0}x{1} tags, size={2}cm and spacing={3}cm".format(n_cols,n_rows,tagSize,tagSpacing*tagSize)
+        c.text(pos[0]+0.6*tagSize, pos[0], caption)
 
 
-def generateCheckerboard(canvas, n_cols, n_rows, size_cols, size_rows):
+def generateCheckerboard(canvas, n_cols, n_rows, size_cols, size_rows, draw_text=True):
     #convert to cm
     size_cols = size_cols*100.0
     size_rows = size_rows*100.0
@@ -145,11 +147,12 @@ def generateCheckerboard(canvas, n_cols, n_rows, size_cols, size_rows):
             if (x+y+1)%2 != 0:
                 c.fill(path.rect(up_left_x, up_left_y, size_cols, size_rows),[color.rgb.black])
     
-    #print caption
-    caption = "{0}x{1}@{2}x{3}cm".format(n_cols,n_rows,size_cols,size_rows)
-    
-    # text.preamble(r"\DeclareFixedFont{\LittleFont}{T1}{ptm}{b}{it}{0.75in}") #
-    c.text(1.05*size_cols, 0.04*size_rows, caption)
+    if draw_text:
+        #print caption
+        caption = "{0}x{1}@{2}x{3}cm".format(n_cols,n_rows,size_cols,size_rows)
+        
+        # text.preamble(r"\DeclareFixedFont{\LittleFont}{T1}{ptm}{b}{it}{0.75in}") #
+        c.text(1.05*size_cols, 0.04*size_rows, caption)
 
 
 if __name__ == "__main__":
@@ -172,6 +175,7 @@ if __name__ == "__main__":
     
     parser.add_argument('--eps', action='store_true', dest='do_eps', help='Also output an EPS file', required=False)
     parser.add_argument('--svg', action='store_true', dest='do_svg', help='Also output an SVG file', required=False)
+    parser.add_argument('--no-text', action='store_true', dest='no_text', help='Disable all text labels on the target (avoids requiring a TeX installation)', required=False)
 
     #Parser the argument list
     try:
@@ -181,12 +185,14 @@ if __name__ == "__main__":
  
     #open a new canvas
     c = canvas.canvas()
+
+    draw_text = not parsed.no_text
     
     #draw the board
     if parsed.gridType == "apriltag":
-        generateAprilBoard(canvas, parsed.n_cols, parsed.n_rows, parsed.tsize, parsed.tagspacing, parsed.tagfamiliy)
+        generateAprilBoard(canvas, parsed.n_cols, parsed.n_rows, parsed.tsize, parsed.tagspacing, parsed.tagfamiliy, draw_text=draw_text)
     elif parsed.gridType == "checkerboard":
-        generateCheckerboard(c, parsed.n_cols, parsed.n_rows, parsed.chessSzX, parsed.chessSzY)
+        generateCheckerboard(c, parsed.n_cols, parsed.n_rows, parsed.chessSzX, parsed.chessSzY, draw_text=draw_text)
     else:
         print("[ERROR]: Unknown grid pattern")
         sys.exit(0)

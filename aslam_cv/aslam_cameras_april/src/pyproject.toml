@@ -1,0 +1,12 @@
+[project]
+name = "src"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "numpy>=2.2.6",
+    "pyx>=0.17",
+    "pyyaml>=6.0.3",
+    "tex>=1.8",
+]
