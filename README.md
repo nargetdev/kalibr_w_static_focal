@@ -4,8 +4,7 @@ this repo mods vs upstream [https://raw.githubusercontent.com/wiki/ethz-asl/kali
 
 ```bash
 cd aslam_cv/aslam_cameras_april/src/gen_pdf
-uv run generate_aprilgrid_from_yaml.py april_24x24_size20mm_space0.3.yaml --border-bits
-1 --corner-fillet-micrometers 500
+uv run generate_aprilgrid_from_yaml.py april_24x24_size20mm_space0.3.yaml --border-bits 1 --corner-fillet-micrometers 500
 ```
 
 ---
